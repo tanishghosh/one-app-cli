@@ -127,10 +127,27 @@ module.exports = async function startApp({
       'Error running docker. Are you sure you have it installed? For installation and setup details see https://www.docker.com/products/docker-desktop'
     );
   });
-  [
+
+  const signals = [
     'SIGINT',
     'SIGTERM',
-  ].forEach((signal) => {
+  ];
+
+  if (process.platform === 'win32') {
+    // eslint-disable-next-line global-require
+    const rl = require('readline').createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    signals.forEach((signal) => {
+      rl.on(signal, () => {
+        process.emit(signal);
+      });
+    });
+  }
+
+  signals.forEach((signal) => {
     // process is a global referring to current running process https://nodejs.org/api/globals.html#globals_process
     process.on(signal, () => 'noop - just need to pass signal to one app process so it can handle it');
   });
